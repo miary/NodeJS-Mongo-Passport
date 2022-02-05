@@ -10,11 +10,19 @@ const config = require('./config/config');
 const morgan = require('./config/morgan');
 const { jwtStrategy } = require('./config/passport');
 const { authLimiter } = require('./middlewares/rateLimiter');
+
 const routes = require('./routes/v1');
+const indexRouter = require("./routes/v1/index.js")
+
 const { errorConverter, errorHandler } = require('./middlewares/error');
 const ApiError = require('./utils/ApiError');
 
 const app = express();
+app.set('views', 'views')
+app.set('view engine', 'ejs')
+app.use(express.json())
+app.use(express.urlencoded({extended:true}))
+app.use(express.static('public'))
 
 if (config.env !== 'test') {
   app.use(morgan.successHandler);
@@ -49,6 +57,9 @@ passport.use('jwt', jwtStrategy);
 if (config.env === 'production') {
   app.use('/v1/auth', authLimiter);
 }
+
+// homepage route
+app.use('/', indexRouter)
 
 // v1 api routes
 app.use('/v1', routes);
