@@ -1,4 +1,5 @@
 const express = require('express');
+const indexRoute = require('./index.route');
 const authRoute = require('./auth.route');
 const userRoute = require('./user.route');
 const docsRoute = require('./docs.route');
@@ -19,6 +20,10 @@ const defaultRoutes = [
 
 const devRoutes = [
   // routes available only in development mode
+  {
+    path: '/',
+    route: indexRoute,
+  },
   {
     path: '/docs',
     route: docsRoute,
