@@ -4,25 +4,29 @@ const xss = require('xss-clean');
 const mongoSanitize = require('express-mongo-sanitize');
 const compression = require('compression');
 const cors = require('cors');
+const path = require('path');
+
 const passport = require('passport');
-const httpStatus = require('http-status');
 const config = require('./config/config');
 const morgan = require('./config/morgan');
 const { jwtStrategy } = require('./config/passport');
 const { authLimiter } = require('./middlewares/rateLimiter');
 
 const routes = require('./routes/v1');
-const indexRouter = require("./routes/v1/index.js")
+const indexRouter = require('./routes/v1/index');
+const registerRouter = require('./routes/v1/register.route');
+const errorController = require('./controllers/error.controller');
 
 const { errorConverter, errorHandler } = require('./middlewares/error');
-const ApiError = require('./utils/ApiError');
+// const ApiError = require('./utils/ApiError');
+// const { error } = require('winston');
 
 const app = express();
-app.set('views', 'views')
-app.set('view engine', 'ejs')
-app.use(express.json())
-app.use(express.urlencoded({extended:true}))
-app.use(express.static('public'))
+app.set('views', 'views');
+app.set('view engine', 'ejs');
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use('public', express.static('public'));
 
 if (config.env !== 'test') {
   app.use(morgan.successHandler);
@@ -58,16 +62,24 @@ if (config.env === 'production') {
   app.use('/v1/auth', authLimiter);
 }
 
+// Public folder access
+app.use(express.static(path.join(__dirname, 'public')));
+
 // homepage route
-app.use('/', indexRouter)
+app.use('/', indexRouter);
 
 // v1 api routes
 app.use('/v1', routes);
 
+// Registration page
+app.use(registerRouter);
+
+app.use(errorController.get404);
+
 // send back a 404 error for any unknown api request
-app.use((req, res, next) => {
-  next(new ApiError(httpStatus.NOT_FOUND, 'Not found'));
-});
+// app.use((req, res, next) => {
+//  next(new ApiError(httpStatus.NOT_FOUND, 'Page Not found'));
+// });
 
 // convert error to ApiError, if needed
 app.use(errorConverter);
